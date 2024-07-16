@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 20px;
+        }
+        .chat-box {
+            width: 860px; /* 调整聊天框的宽度 */
+            height: 560px;
+            margin: 25px auto;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            overflow: hidden;
+        }
+        .messages {
+            height: 440px;
+            overflow-y: scroll;
+            padding: 10px 0;
+        }
+        .message {
+            display: flex;
+            align-items: flex-start; /* 默认消息左对齐 */
+            margin-bottom: 10px;
+        }
+        .message .avatar {
+            width: 40px; /* 头像宽度 */
+            height: 40px; /* 头像高度 */
+            margin-right: 10px; /* 头像与消息内容之间的间距 */
+            border-radius: 50%; /* 圆形头像 */
+            overflow: hidden;
+        }
+        .message .avatar img {
+            width: 100%; /* 图片填充头像框 */
+            height: auto;
+        }
+        .message .message-content {
+            background-color: #f2f2f2;
+            padding: 12px 16px;
+            border-radius: 15px;
+            font-size: 14px;
+            max-width: 70%; /* 消息内容最大宽度 */
+        }
+        .message .timestamp {
+            font-size: 12px;
+            color: #888;
+            margin-top: 15px;
+        }
+        .message.self .message-content {
+            background-color: #d6e0f5;
+            align-self: flex-end;
+            text-align: right; /* 自己的消息右对齐 */
+            margin-left: auto; /* 将消息内容向右对齐 */
+        }
+        .message.other .message-content {
+            background-color: #e5e5ea;
+            text-align: left; /* 对方的消息左对齐 */
+        }
+        .message.self .avatar {
+            margin-left: 10px; /* 自己的头像右对齐 */
+            margin-right: 0;
+        }
+        .message.other .avatar {
+            margin-right: 10px; /* 对方的头像左对齐 */
+        }
+        .input-container {
+            display: flex;
+            margin-top: 20px;
+        }
+        .input-box {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 10px 0 0 10px;
+            font-size: 16px;
+        }
+        .send-button {
+            padding: 12px 35px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            border-radius: 0 10px 10px 0;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .send-button:hover {
+            background-color: #45a049;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .collect-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .collect-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            padding: 12px 16px;
+            z-index: 1;
+        }
+        .collect-dropdown:hover .collect-dropdown-content {
+            display: block;
+        }
+        .collect-product {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .collect-product img {
+            width: 50px;
+            height: 50px;
+            margin-right: 10px;
+        }
+        .collect-product-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .collect-dropdown-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+        .collect-dropdown-btn:hover {
+            background-color: #3e8e41;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+
+    <div class="chat-box">
+        <div style="text-align: center" >用户端界面</div>
+        <div class="messages" id="messages">
+            <!--  消息  -->
+            <div v-for="(message,index)  in chatMessage">
+                <div class="message self" v-if="message.name != 'admin' ">
+                    <div class="message-content">
+                        {{message.content}}
+                        <div class="timestamp">{{message.timestamp}}</div>
+                    </div>
+                    <div class="avatar">
+                        <img src="https://xin-qiu.oss-cn-beijing.aliyuncs.com/user.png" alt="Avatar">
+                    </div>
+                </div>
+                <div class="message other" v-else>
+                    <div class="avatar">
+                        <img src="https://xin-qiu.oss-cn-beijing.aliyuncs.com/admin.png" alt="Avatar">
+                    </div>
+                    <div class="message-content">
+                        {{message.content}}
+                        <div class="timestamp">{{message.timestamp}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="input-container">
+            <input type="text" id="messageInput" class="input-box" placeholder="输入消息..." v-model="content" @keyup.enter="send">
+            <button class="send-button" @click.prevent="send()">发送</button>
+        </div>
+    </div>
+</div>
+<script src="js/vue.js"></script>
+<script src="js/axios.js"></script>
+<script>
+
+    let app = new Vue({
+        el:'#app',
+        data:{
+
+            content:'',//用户发的消息
+            chatMessage:[], //聊天内容
+
+            protocol:'',     //当前页面的协议
+            host:'',        //服务器的主机名或 IP 地址主机和端口
+            endpoint:'',    //端点
+            contextPath:'', //项目名
+
+        },
+        methods:{
+            
+            //WebSocket 客服聊天  初始化参数  建立连接
+            initWebSocket() {
+                // 获取当前页面的协议、主机和端口
+                //const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const protocol = this.protocol;
+
+                //const host = window.location.host;
+                const host = this.host;
+                //考虑nginx反向代理没有端口的问题
+                //const host = window.location.host.includes(':') ? window.location.host : window.location.host + ':8080';
+
+                //const endpoint = '/shop_war/echo';
+                const endpoint = this.endpoint+ this.contextPath +'/admin';
+                //const endpoint = '/shop/echo';
+
+                // 动态生成 WebSocket 的 URL
+                const wsUrl = `${protocol}://${host}:${endpoint}`;
+
+                // 创建 WebSocket 连接
+                var ws = new WebSocket(wsUrl);
+
+                ws.onopen = function () {
+                    console.log('WebSocket 连接已经建立。');
+                    // ws.send('Hello, server!');
+                };
+
+                ws.onmessage = function (event) {
+                    console.log('收到服务器消息：', event.data);
+                    //该刷新了
+                    if (event.data){
+                        // alert("获取到了服务器的消息");  刷新数据 即获取客服端的消息
+                        app.get().then(result=>{
+                            if (result.data.code==0){
+
+                            }else{
+                                // alert("获取服务端的消息"+result.data.obj);
+                                // 确保 this.chatMessage 已经是一个数组
+                                if (!Array.isArray(this.chatMessage)) {
+                                    app.$data.chatMessage = [];
+                                }
+                                let obj = result.data.obj;
+                                obj.forEach(product => {
+                                    app.$data.chatMessage.push(product);
+                                });
+                            }
+                        })
+                    }
+                };
+
+                ws.onerror = function (event) {
+                    console.error('WebSocket 连接出现错误：', event);
+                };
+
+                ws.onclose = function () {
+                    console.log('WebSocket 连接已经关闭。');
+                };
+
+                window.onbeforeunload = function() {
+                    app.$data.ws.close();
+                };
+
+                this.ws = ws;
+            },
+            //获取 要建立连接的 初始化参数
+            init(){
+                //用于初始化websocket
+                axios.post("websocket.action?op=getServerInfo").then(result=>{
+                    if (result.data.code==0){
+
+                    }else{
+                        this.protocol = result.data.obj.protocol;
+                        this.host = result.data.obj.host;
+                        this.endpoint = result.data.obj.port;
+                        this.contextPath = result.data.obj.contextPath;
+                        //动态初始化websocket的url，并建立连接，用来提醒该刷新消息了
+                        this.initWebSocket();
+                    }
+                })
+            },
+            //发送 消息 到 服务器
+            send(){
+                let params = new URLSearchParams(   );
+                if (this.content == null || this.content == ''){
+                    alert("请先输入内容");
+                    return;
+                }
+                params.append("content",this.content);
+                params.append("name","user");
+                axios.post("websocket.action?op=setMessage",params).then(result=>{
+                    let jm = result.data;
+                    if (jm.code == 1){
+                        this.content='';
+                        this.get().then(result=>{
+                            app.$data.chatMessage = [];
+                            if (!Array.isArray(this.chatMessage)) {
+                                app.$data.chatMessage = [];
+                            }
+                            let obj = result.data.obj;
+                            obj.forEach(product => {
+                                app.$data.chatMessage.push(product);
+                            });
+                        })
+                    }
+
+                })
+            },
+            //获取  服务端的消息  后调用
+            get() {
+                let params = new URLSearchParams();
+                return axios.post("websocket.action?op=getMessage", params)
+                    .then(response => {
+                        // 假设服务器返回的数据结构如下：
+                        // { data: { code: 0, obj: {...} } }
+                        return response;
+                    })
+                    .catch(error => {
+                        console.error('获取数据时发生错误：', error);
+                        throw error;
+                    });
+            },
+            //初始内容并渲染  即获取聊天记录 原先的聊天内容
+            initContent(){
+                this.get().then(result=>{
+                    app.$data.chatMessage = [];
+                    if (!Array.isArray(this.chatMessage)) {
+                        app.$data.chatMessage = [];
+                    }
+                    let obj = result.data.obj;
+                    obj.forEach(product => {
+                        app.$data.chatMessage.push(product);
+                    });
+                })
+            },
+
+        },
+        
+        //选择挂载点为mounted  vue生命周期调用
+        mounted:function (){
+            axios.all(  [ this.init(),this.initContent() ] );
+        },
+
+    })
+</script>
+</body>
+</html>
