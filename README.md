@@ -5,8 +5,11 @@
 ## 功能
 
 - 实时消息传递：使用 WebSocket 实现即时消息传输，聊天双方可以实时看到对方的消息。
-- 消息存储：聊天记录被存储在 Redis 数据库中，以便于后续查看。
-
+  - 消息存储：聊天记录被存储在 Redis 数据库中， 
+    zset格式存储 
+       key:content_websocke
+       score:时间戳
+       member:用户姓名:内容
 ## 技术栈
 
 - **前端**: Vue.js, Axios
